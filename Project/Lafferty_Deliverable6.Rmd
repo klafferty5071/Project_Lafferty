@@ -1,0 +1,213 @@
+---
+title: "Deliverable 5"
+author: "Kalia Lafferty, Julia Gabriel"
+date: "2024-11-24"
+output: 
+  html_document:
+    toc_float: true
+    toc: true
+---
+
+
+### Libraries
+
+```{r include=FALSE}
+library(ggformula)
+library(tidyverse)
+library(dplyr)
+library(wordcloud2)
+```
+
+## Summary
+
+This project explores correlations related to Spotify users and popularity of 1960s songs. This utilized a data set that included different artists and songs from the 1960s. Additionally, it gave insight to the duration and popularity index (PI) on Spotify. Many of the variables were compared to the PI to identify correlations. The frequencies within most variables were also explored for possible patterns. These methods allowed a deeper understanding of Spotify users and popularity. Additionally, it highlighted the importance of having various variables and the method in which observations are selected.
+
+## Purpose
+
+This project aims to identify correlations between different factors and the popularity of 1960s music in terms of track duration and popularity. Artists and songs that are especially popular with Spotify users will also be taken into account and can help identify what leads to popular music.
+
+## Data
+
+```{r}
+songs <- read.csv("C:/Users/kalia/Documents/oldies_60s_top_artists_tracks.csv")
+```
+
+```{r}
+dim(songs)
+```
+
+
+### Variables:
+
+-   **Artist:** This is a *nominal categorical* variable that details the artist or band.
+
+-   **Track.Name:** This is a *nominal categorical* variable that details the name of the song.
+
+-   **Popularity:** This is a *ratio numerical* variable that gives the ranks in Spotify for each song based on the current popularity. Spotify ranks their songs using the popularity index, which factors how many times the song is streamed, how recently it has been streamed, and how often the songs get added to libraries. This ranking ranges from 0 to 100. Songs with a higher popularity ranking is more likely to be featured.
+
+-   **Duration..ms.:** This is a *ratio numerical* variable that details the duration of the tracks in milliseconds.
+
+-   **Track.ID:** This is a *nominal categorical* variable that details the unique ID given by Spotify to each track.
+
+### Missing Variables:
+
+There were no missing/NA/null variables.
+
+### Data Orientation:
+
+The data was reoriented multiple times using the summarise and group_by function. This allowed for better insight into frequencies or mean values within groups. This was used to count the frequency in which each artist shows up in the table. Additionally, it was also used to make a group of PIs for each artist and calculate the average PI levels.
+
+## Exploratory Data Analysis
+
+```{r}
+summary(songs)
+```
+
+**This summary details the type of variables and some of the summary statistics for the numerical data such as the quartiles, mean, minimum, and maximum. Three variables are of the character class: Artist, Track.Name, and Track.ID. Given the variables have to do with names or IDs, these variables are nominal categorical which tell us identifiers about the row's artist, track, and ID. Additionally, there are two variables with numerical data: popularity and duration. Duration is a ratio variable since it has a set zero. The mean communicates the average of all the song durations in this data. This provides a duration of central tendency. Additionally, the median shows the central value of the data set and says that 50% of the songs have a duration below 169867 milliseconds. The minimum gives us the minimum duration of songs in that data set which is 82680 and the maximum gives the maximum duration of songs in that data set which is 544640. Finally, the third and first quartile says that 50% of the song's durations lie between 151656 and 206310. Popularity is an ratio variable since it has a set zero. This variable has a scale between 0 and 100 which describes the popularity of the songs based on streams, how recently it got streamed, and when it got saved to the library. The mean describes the popularity index score's central tendency in this data. The median communicates the central value and indicates 50% of the PI scores are below 59. The minimum gives us the minimum PI score of songs in that data set which is 0 and the maximum gives the maximum PI score of songs in that data set which is 90. Finally, the third and first quartile says that 50% of the song's PI scores lie between 43.75 and 70.**
+
+```{r}
+Artist_count <- songs %>% 
+  group_by(Artist) %>%
+  summarise(n = n()) 
+```
+
+```{r}
+Artist_count %>%
+  arrange(n) 
+```
+
+**This table shows the frequency in which each artist is listed. This can give us insight into which artists show up the most frequently and potentially had the most influence. This table uses the variable Artist and counts the frequency of which they show up.**
+
+```{r}
+Artist_count %>%
+  summarise(SetsOf10 = floor(n/10)) %>% #displays how many tens show up per artist
+  summarise(Tens=sum(SetsOf10),Artists=n(),
+            ArtistMax=max(Artist_count$n),
+            ArtistMin=min(Artist_count$n)) #Shows
+```
+
+**This shows how many times the artists were listed 10 times and the minimum and maximum of the frequencies. According to the table, 48 of the 50 artists were listed exactly 10 times. Additionally, artists were listed a maximum of ten times and a minimum of one time. This uses the variable Artists, counts the frequency they show up, and then counts the amount of artists show up exactly ten times. This suggests that the person who made this data set listed each artist ten times for the most part and did not pick the top 486 artists in the 1960s with high PI scores. The minimum could suggest incompleteness in listing each ten times.**
+
+```{r}
+hist(Artist_count$n, main = "Frequency of Artist Counts", 
+     xlab = "Number of Times Artist was listed",
+     col="purple") 
+  
+```
+
+**This histogram shows that most artists tend to show up 10 times with a couple outliers showing up one and three times. This suggests that each artist has equal influence, however this can just be how the creator of the data set decided to list them. This uses the variable Artists, counts the frequency they show up, and then lists the frequencies through the histogram.**
+
+```{r}
+songs %>% 
+  group_by(Track.Name) %>%
+  summarise(n = n())  %>%
+  summary()
+```
+
+**This table details the frequency in which the songs show up in the data set. Given the mean is greater than one, some songs show up multiple times, this may be the same song sang by different artists. The minimum tells us that each song was listed at least once. This makes sense since the observations are by song, thus if a song were to not show up, it would not be in the table. The max means that songs show up a maximum of two times. This means that there are repeated songs, given each song has a unique track id, this probably means the song is sung by a different artist or it is a re-released song. Additionally, the third quartile tells us that at least 75% of the data has one given that the minimum is also one. This means that at least 75% of the songs only show up once. This table uses the variable Track.Name, counts the amount of times a track shows up and then summarizes that data.**
+
+
+```{r}
+plot(Popularity~log(Duration..ms.),data=songs, main="Popularity vs Duration plot",
+     xlab = "log of Duration (ms)")
+```
+
+**This data shows no visible correlation between popularity and duration. There is a lot of clustering between 11 and 12.5, however this does not signify that duration has an impact on popularity. This uses the variables Popularity and Duration. It takes the log of Duration which brings together spread out data for easier to read numbers. It does this by compressing large values into smaller values where larger points are more significantly affected.**
+
+```{r}
+songs %>%
+  ggplot(mapping=aes(x=Duration..ms.*1.66667e-5,y=Popularity)) +
+  geom_violin(fill="lightblue") +
+  labs(
+    x = "Duration (min)",
+    y = "PI score",
+    title = "Duration vs. Popularity violin plot"
+  ) +
+  theme_classic()
+```
+
+**This data has most of the density clustered around a duration of 3 and 6 minutes with PI scores clustering between 30 and 75. This suggests that songs of certain durations are more popular with current Spotify users. Additionally, this plot shows that a high PI score is unlikely with lower duration. This tells us that Spotify users have a preference for longer songs. This supports that songs with a moderate duration range of 3 to 6 minutes have a higher popularity. This uses the variables Popularity and Duration. It converts Duration to minutes for easier to read numbers.**
+
+```{r}
+hist(songs$Popularity, main = "Popularity Histogram",
+     xlab = "Popularity Ranks",
+     col="lavender")
+```
+
+**This shows the frequency of current popularity rankings based. Most of the songs typically get higher popularity index with a mode between 60 and 70. This data is left skewed, this signifies that the top 484 songs tend rank higher based on Spotify's current listeners. Since Spotify bases the popularity index based on frequency of streams and saves, this could mean that songs in the 1960s still resonate with current Spotify listeners. This suggests that songs in the 1960s still have impact. This variable uses popularity and displays the frequency of PI levels.**
+
+```{r}
+songs %>%
+  select(Popularity) %>%
+  filter(Popularity >=50) %>%
+  summarise(Over65 = n(),Proportion=n()/484)
+```
+
+
+```{r}
+boxplot(songs$Popularity,main="Popularity Boxplot", ylab = "Ranking",
+        col="lightblue")
+```
+
+**This box plot shows a spread of data between 0 and under 90 which is a large spread since the popularity index ranges from 0 to 100. It also shows the IQR is between 40 and 70. This means that half 1960 songs have a popularity index of between 40 and 70. This suggests that songs from the 1960s still have impact with current Spotify listeners. This uses the variable Ranking.**
+
+```{r}
+hist(songs$Duration..ms.*1.66667e-5, main = "Duration Histogram",
+     xlab = "Duration (minutes)",col="darkblue")
+```
+
+**This shows the frequency of the duration of songs. This shows that most songs have a duration between 2 and 3 minutes. This provides a focus for typical song durations. This uses the variable Duration converted into minutes.**
+
+```{r}
+boxplot(songs$Duration..ms.*1.66667e-5,main="Duration Boxplot", 
+        ylab = "Duration (minutes)", col="lightyellow")
+```
+
+**This shows the the spread of data between one and nine. It also shows multiple outliers falling outside of 1.5 times the IQR. These outliers likely represent unusually long songs compared to the majority. This could indicate extended tracks, or remixes. Additionally, it shows that 50% of the songs fall between approximately 2 and under 4 minutes. This range provides a focus for typical song durations. This uses the variable Duration converted into minutes.**
+
+
+```{r}
+Artist_PI <- songs %>%
+  select(Artist,Popularity) %>%
+  group_by(Artist) %>%
+  summarize(MeanPI=mean(Popularity)) %>%
+  arrange(-MeanPI)
+```
+
+```{r}
+head(Artist_PI)
+```
+
+**This table groups the artists and finds their mean popularity ranking. This can help identify which artist has the most current influence based on current Spotify popularity index.This uses the variable Artists and Popularity calculates their average PI score.**
+
+```{r}
+Artist_PI %>%
+  wordcloud2(size=0.3)
+```
+
+**This is shows artists by ranking them through PI scores. For example, The Beatles have a higher PI score than The Four Tops, who have a lower PI score. This gives us into into which artists have more influence based on Spotify's current listeners. This uses the variable Artists and Popularity calculates their average PI score.**
+
+## Data Cleanliness Details
+
+This is tidy data, each observation having its own row and each variable having its own column. This data has no null or NA values. No observation had to be changed or removed. The duration variable had do be changed to minutes for easier analysis, no other variable noticeably required manipulation. Multiple features are categorical which detail artist track names. It would be difficult to tell which elements are spelled wrong without going through each of the 484 observations. Thus, this data will be analyzed with the assumption that the categorical data was inputted correctly. None of the variables presented any difficulty in understanding. Finally, there seems to be a lack of correlation between the variables.
+
+
+## Results
+
+The analysis revealed notable patterns regarding the popularity of 1960s music among current Spotify users. A histogram of popularity rankings showed that most tracks achieved a popularity index (PI) between 60 and 70, indicating that these songs continue to resonate with contemporary audiences. The data’s left skew suggested higher PI scores with the 484 songs within the data set. This means that people still prefer 1960s songs given a mean PI of 63.45 and a mode in the 60-70 range. Violin plots and scatter plots examining the relationship between duration and popularity revealed that tracks with duration between 3 and 6 minutes tended to have higher popularity scores. Notably, 50% of the tracks fell within this duration range, with a mean duration of 3.5 minutes, aligning with contemporary listening preferences.
+
+Artist-level analysis provided further insight into which artists have maintained cultural relevance through grouping data by artist and calculating mean popularity scores. This revealed that a few prominent artists, such as The Beatles, consistently achieved high average PI values, with a mean PI of 85 for top performers. This trend was also visualized through a word cloud, where artist names with higher mean popularity scores were displayed more prominently. The prevalence of specific artists with multiple tracks in the data set—48 out of 50 artists appearing exactly 10 times— may suggest enduring influence, though this trend may also reflect biases in the data set's selection process. Overall, while the data set's limitations preclude definitive conclusions about individual song characteristics that drove popularity in the 1960s, the analysis underscores the enduring legacy of higher-ranking artists, such as Creedence Clearwater Revival, and their tracks in contemporary music culture.
+
+## Conclusions
+
+This analysis aimed to uncover correlations between various factors and the popularity of 1960s music based on current Spotify user data. By examining patterns in popularity rankings, track duration, and artist prevalence, the study illuminated the modern-day appeal of 1960s music. Key findings include a strong listener preference for tracks with duration between 3 and 6 minutes and a concentration of popularity rankings in the 60-70 range. These trends suggest that certain characteristics of 1960s songs align well with contemporary streaming habits, reinforcing the timeless quality of this music. Furthermore, the data highlighted the prominence of select artists like The Beatles, whose enduring appeal underscores their significant cultural and musical legacy.
+
+While the data set’s limitations, such as artist frequency biases and the absence of historical or contextual variables, prevent a comprehensive analysis of what drove popularity in the 1960s, the findings still provide meaningful insights. The project underscores the value of integrating additional data sets and historical research to fully understand the factors contributing to the enduring impact of 1960s music. Nonetheless, this study successfully demonstrates the continued relevance of iconic tracks and artists from this era, providing a foundation for future exploration into the timeless nature of music and its evolving cultural resonance. This foundation includes insight into popularity ranking and Spotify user preferences. 
+
+
+## References
+
+Wickham, Hadley, et al. R for Data Science: Import, Tidy, Transform, Visualie, and Model Data. O’Reilly, 2023. 
+
+Kanchana. (2024, March). Spotify Oldies Dataset, Version 1. from https://www.kaggle.com/datasets/kanchana1990/spotify-oldies-dataset.
+
